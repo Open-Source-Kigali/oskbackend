@@ -9,14 +9,14 @@ export const createPartnerSchema = z.object({
         .trim(),
     description: z.string().min(1, "Description is required").trim(),
     email: z
-    .string()
-    .min(1, "Email is required")
-    .email("Email format is invalid")
-    .trim(),
-  partershipReason: z
-    .string()
-    .min(1, "Partnership reason is required")
-    .trim(),
+        .string()
+        .min(1, "Email is required")
+        .email("Email format is invalid")
+        .trim(),
+    partershipReason: z
+        .string()
+        .min(1, "Partnership reason is required")
+        .trim(),
 });
 
 export const updatePartnerSchema = createPartnerSchema.partial();

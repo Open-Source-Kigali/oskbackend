@@ -1,42 +1,42 @@
 import { z } from "zod";
 
 export const createEventSchema = z
-  .object({
-    title: z.string().min(1, "Title is required").trim(),
-    tagline: z.string().trim().optional().nullable(),
-    description: z.string().min(1, "Description is required").trim(),
-    category: z.string().min(1, "Category is required").trim(),
-    mode: z.enum(["in-person", "virtual", "hybrid"] as const).default("in-person"),
-    featured: z
-      .union([z.boolean(), z.string().transform((v) => v === "true")])
-      .default(false),
+    .object({
+        title: z.string().min(1, "Title is required").trim(),
+        tagline: z.string().trim().optional().nullable(),
+        description: z.string().min(1, "Description is required").trim(),
+        category: z.string().min(1, "Category is required").trim(),
+        mode: z.enum(["in-person", "virtual", "hybrid"] as const).default("in-person"),
+        featured: z
+        .union([z.boolean(), z.string().transform((v) => v === "true")])
+        .default(false),
     capacity: z
-      .union([z.number().int().nonnegative(), z.string(), z.null()])
-      .optional()
-      .nullable()
-      .transform((v) => {
+        .union([z.number().int().nonnegative(), z.string(), z.null()])
+        .optional()
+        .nullable()
+        .transform((v) => {
         if (v === null || v === undefined || v === "") return null;
         const num = Number(v);
         if (isNaN(num)) return undefined;
         return num;
-      }),
+    }),
     registered: z
-      .union([z.number().int().nonnegative(), z.string(), z.null()])
-      .optional()
-      .nullable()
-      .transform((v) => {
+        .union([z.number().int().nonnegative(), z.string(), z.null()])
+        .optional()
+        .nullable()
+        .transform((v) => {
         if (v === null || v === undefined || v === "") return null;
         const num = Number(v);
         if (isNaN(num)) return undefined;
         return num;
-      }),
+    }),
     date: z
-      .string()
-      .min(1, "Date is required")
-      .transform((v) => new Date(v))
-      .refine((date) => !isNaN(date.getTime()), {
+    .string()
+    .min(1, "Date is required")
+    .transform((v) => new Date(v))
+    .refine((date) => !isNaN(date.getTime()), {
         message: "Date must be a valid ISO date string",
-      }),
+    }),
     endDate: z
       .string()
       .optional()
