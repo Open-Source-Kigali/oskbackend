@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import memberService from "../services/member.service";
 import response from "../utils/response";
 import { CodingLevel, Member } from "../generated/prisma/client";
+import trimStrings from "../utils/trim-strings";
 
 const allowedCodingLevels = new Set(Object.values(CodingLevel));
 
@@ -36,11 +37,11 @@ async function findMemberById(
 
 async function addMember(
   req: Request<object, unknown, Omit<Member, "id">>,
-  res: Response,
+  res: Response, 
   next: NextFunction,
 ) {
   try {
-    const newMember = await memberService.addMember(req.body);
+    const newMember = await memberService.addMember(trimStrings(req.body));
     response.success(res, newMember, 201, "Member created successfully");
   } catch (err) {
     next(err);
@@ -53,8 +54,9 @@ async function updateMember(
   next: NextFunction,
 ) {
   try {
+    const trimmed = trimStrings(req.body);
     const filtered = Object.fromEntries(
-      Object.entries(req.body).filter(([, v]) => v !== ""),
+      Object.entries(trimmed).filter(([, v]) => v !== ""),
     ) as Partial<Omit<Member, "id">>;
 
     if (

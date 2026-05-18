@@ -3,6 +3,7 @@ import partnerService from "../services/partner.service";
 import response from "../utils/response";
 import { Partner } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
+import trimStrings from "../utils/trim-strings";
 
 type PartnerBody = Omit<Partner, "id" | "createdAt" | "updatedAt">;
 
@@ -66,7 +67,7 @@ async function addPartner(
     publicId = uploaded.public_id;
 
     const newPartner = await partnerService.addPartner({
-      ...req.body,
+      ...trimStrings(req.body),
       logoUrl: uploaded.secure_url,
       logoPublicId: uploaded.public_id,
     });
@@ -93,7 +94,7 @@ async function updatePartner(
     if (!existing) return response.failure(res, "Partner not found", 404);
 
     const data: Partial<PartnerBody> = Object.fromEntries(
-      Object.entries(req.body).filter(([, v]) => v !== ""),
+      Object.entries(trimStrings(req.body)).filter(([, v]) => v !== ""),
     ) as Partial<PartnerBody>;
 
     if (data.websiteUrl) {
