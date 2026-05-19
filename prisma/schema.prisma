@@ -10,6 +10,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum CodingLevel {
@@ -27,6 +28,12 @@ enum ProjectStatus {
   active
   archived
   paused
+}
+
+enum EventMode {
+  in_person
+  virtual
+  hybrid
 }
 
 model User {
@@ -47,7 +54,7 @@ model Event {
   imagePublicId String
   description   String
   category      String
-  mode          String   @default("in-person")
+  mode          EventMode @default(in_person)
   featured      Boolean  @default(false)
   capacity      Int?
   registered    Int?
