@@ -17,6 +17,7 @@ tags:
   - name: Events
   - name: Partners
   - name: Projects
+  - name: Contributors
   - name: Users
 
 paths:
@@ -372,6 +373,24 @@ paths:
                       data:
                         type: array
                         items: { $ref: "#/components/schemas/Project" }
+        "500": { $ref: "#/components/responses/InternalError" }
+  /contributors:
+    get:
+      tags: [Contributors]
+      summary: List all contributors from CONTRIBUTORS.md and GitHub
+      responses:
+        "200":
+          description: Contributors retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: {}
         "500": { $ref: "#/components/responses/InternalError" }
     post:
       tags: [Projects]
