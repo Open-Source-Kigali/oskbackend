@@ -2,9 +2,9 @@ name: ci
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, staging, dev]
   push:
-    branches: [main]
+    branches: [main, staging, dev]
 
 jobs:
   check:
@@ -22,6 +22,9 @@ jobs:
 
       - name: Generate Prisma client
         run: npx prisma generate
+
+      - name: Test
+        run: npm test
 
       - name: Typecheck
         run: npm run typecheck
