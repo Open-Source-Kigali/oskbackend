@@ -35,7 +35,8 @@ function parseSpeakers(v: unknown): string[] | undefined {
 
 function buildEventData(
   body: Record<string, unknown>,
-): Prisma.EventUpdateInput {
+  res: Response,
+): Prisma.EventUpdateInput | null {
   const data: Record<string, unknown> = {};
   const passthrough = [
     "title",
@@ -50,14 +51,56 @@ function buildEventData(
   for (const k of passthrough) {
     if (body[k] !== undefined && body[k] !== "") data[k] = body[k];
   }
+
   if (body.featured !== undefined) data.featured = parseBoolean(body.featured);
-  if (body.capacity !== undefined)
-    data.capacity = body.capacity === null ? null : Number(body.capacity);
-  if (body.registered !== undefined)
-    data.registered = body.registered === null ? null : Number(body.registered);
-  if (body.date !== undefined) data.date = new Date(body.date as string);
-  if (body.endDate !== undefined)
-    data.endDate = body.endDate === null ? null : new Date(body.endDate as string);
+
+  if (body.capacity !== undefined) {
+    if (body.capacity === null) {
+      data.capacity = null;
+    } else {
+      const cap = Number(body.capacity);
+      if (isNaN(cap) || cap < 0) {
+        response.failure(res, "capacity must be a non-negative number", 400);
+        return null;
+      }
+      data.capacity = cap;
+    }
+  }
+
+  if (body.registered !== undefined) {
+    if (body.registered === null) {
+      data.registered = null;
+    } else {
+      const reg = Number(body.registered);
+      if (isNaN(reg) || reg < 0) {
+        response.failure(res, "registered must be a non-negative number", 400);
+        return null;
+      }
+      data.registered = reg;
+    }
+  }
+
+  if (body.date !== undefined) {
+    const d = new Date(body.date as string);
+    if (isNaN(d.getTime())) {
+      response.failure(res, "date is not a valid date", 400);
+      return null;
+    }
+    data.date = d;
+  }
+
+  if (body.endDate !== undefined) {
+    if (body.endDate === null) {
+      data.endDate = null;
+    } else {
+      const d = new Date(body.endDate as string);
+      if (isNaN(d.getTime())) {
+        response.failure(res, "endDate is not a valid date", 400);
+        return null;
+      }
+      data.endDate = d;
+    }
+  }
 
   const speakers = parseSpeakers(body.speakers);
   if (speakers !== undefined) data.speakers = speakers;
@@ -116,7 +159,7 @@ async function addEvent(
       req.body.endDate = ed as unknown as string;
     }
 
-    const data = buildEventData(req.body) as EventBody;
+    const data = buildEventData(req.body,res) as EventBody;
     data.imageUrl = uploaded.secure_url;
     data.imagePublicId = uploaded.public_id;
     if (!data.speakers) data.speakers = [];
@@ -153,7 +196,8 @@ async function updateEvent(
       req.body.endDate = ed as unknown as string;
     }
 
-    const data = buildEventData(req.body);
+    const data = buildEventData(req.body,res);
+    if (!data) return; // buildEventData already sent error response
 
     if (req.file) {
       const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
