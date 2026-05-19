@@ -39,6 +39,7 @@ paths:
                         properties:
                           status: { type: string, example: ok }
                           uptime: { type: number }
+                          db: { type: string, example: ok }
         "503":
           description: Database unreachable
           content:
