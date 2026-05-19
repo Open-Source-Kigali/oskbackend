@@ -1,14 +1,40 @@
 import { prisma } from "../config/prisma";
 import { Event, Prisma } from "../generated/prisma/client";
 
+// Public event responses should not leak the backing Cloudinary identifier.
+const publicEventSelect = {
+  id: true,
+  title: true,
+  tagline: true,
+  imageUrl: true,
+  description: true,
+  category: true,
+  mode: true,
+  featured: true,
+  capacity: true,
+  registered: true,
+  date: true,
+  endDate: true,
+  timeLabel: true,
+  location: true,
+  speakers: true,
+  registerUrl: true,
+  createdAt: true,
+  updatedAt: true,
+} satisfies Prisma.EventSelect;
+
 async function findAllEvents() {
-  return prisma.event.findMany();
+  return prisma.event.findMany({ select: publicEventSelect });
+}
+
+async function findPublicEventById(id: string) {
+  return prisma.event.findUnique({ where: { id }, select: publicEventSelect });
 }
 
 async function addEvent(
   eventData: Omit<Event, "id" | "createdAt" | "updatedAt">,
 ) {
-  return prisma.event.create({ data: eventData });
+  return prisma.event.create({ data: eventData, select: publicEventSelect });
 }
 
 async function findEventById(id: string) {
@@ -16,7 +42,11 @@ async function findEventById(id: string) {
 }
 
 async function updateEvent(id: string, eventData: Prisma.EventUpdateInput) {
-  return prisma.event.update({ where: { id }, data: eventData });
+  return prisma.event.update({
+    where: { id },
+    data: eventData,
+    select: publicEventSelect,
+  });
 }
 
 async function deleteEvent(id: string) {
@@ -25,6 +55,7 @@ async function deleteEvent(id: string) {
 
 export default {
   findAllEvents,
+  findPublicEventById,
   addEvent,
   findEventById,
   updateEvent,
