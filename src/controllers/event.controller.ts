@@ -114,6 +114,12 @@ async function addEvent(
   res: Response,
   next: NextFunction,
 ) {
+  const required = ["title", "description", "category", "location", "date"];
+  for (const field of required) {
+    if (!req.body[field])
+      return response.failure(res, `${field} is required`, 400);
+  }
+
   if (!req.file) {
     return response.failure(res, "Image file is required", 400);
   }
