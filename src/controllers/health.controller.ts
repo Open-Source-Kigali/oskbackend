@@ -19,6 +19,7 @@ async function checkHealth(_req: Request, res: Response, _next: NextFunction) {
       db: "unreachable",
     });
   }
+
 }
 
 export default { checkHealth };

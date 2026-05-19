@@ -4,6 +4,13 @@ import response from "../utils/response";
 import { ProjectStatus } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
 import { fetchRepoSnapshot } from "../services/github.service";
+import trimStrings from "../utils/trim-strings";
+import {
+  createProjectSchema,
+  updateProjectSchema,
+  CreateProjectInput,
+  UpdateProjectInput,
+} from "../schemas/project.schema";
 
 const FOLDER = "open-source-kigali/projects";
 
@@ -20,12 +27,6 @@ type CreateBody = {
 };
 
 type UpdateBody = Partial<CreateBody>;
-
-function parseBoolean(value: unknown) {
-  if (typeof value === "boolean") return value;
-  if (typeof value === "string") return value === "true" || value === "1";
-  return undefined;
-}
 
 async function findAllProjects(
   _req: Request,
@@ -63,20 +64,27 @@ async function addProject(
 
   let publicId: string | undefined;
   try {
+    const validation = createProjectSchema.safeParse(req.body);
+    if (!validation.success) {
+      const errors = validation.error.issues
+        .map((e: any) => `${e.path.join(".") || "root"}: ${e.message}`)
+        .join("; ");
+      return response.failure(res, errors, 400);
+    }
+
     const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
     publicId = uploaded.public_id;
 
-    const featured = parseBoolean(req.body.featured) ?? false;
     const created = await projectService.addProject({
-      slug: req.body.slug,
-      repoOwner: req.body.repoOwner,
-      repoName: req.body.repoName,
-      tagline: req.body.tagline,
-      category: req.body.category,
-      status: req.body.status ?? "active",
-      featured,
-      maintainer: req.body.maintainer ?? null,
-      langColor: req.body.langColor ?? null,
+      slug: validation.data.slug,
+      repoOwner: validation.data.repoOwner,
+      repoName: validation.data.repoName,
+      tagline: validation.data.tagline,
+      category: validation.data.category,
+      status: validation.data.status,
+      featured: validation.data.featured,
+      maintainer: validation.data.maintainer ?? null,
+      langColor: validation.data.langColor ?? null,
       imageUrl: uploaded.secure_url,
       imagePublicId: uploaded.public_id,
     });
@@ -106,17 +114,17 @@ async function updateProject(
     const existing = await projectService.findProjectById(req.params.id);
     if (!existing) return response.failure(res, "Project not found", 404);
 
-    const data: Record<string, unknown> = {};
-    const b = req.body;
-    if (b.slug) data.slug = b.slug;
-    if (b.repoOwner) data.repoOwner = b.repoOwner;
-    if (b.repoName) data.repoName = b.repoName;
-    if (b.tagline) data.tagline = b.tagline;
-    if (b.category) data.category = b.category;
-    if (b.status) data.status = b.status;
-    if (b.featured !== undefined) data.featured = parseBoolean(b.featured);
-    if (b.maintainer !== undefined) data.maintainer = b.maintainer;
-    if (b.langColor !== undefined) data.langColor = b.langColor;
+    const validation = updateProjectSchema.safeParse(req.body);
+    if (!validation.success) {
+      const errors = validation.error.issues
+        .map((e: any) => `${e.path.join(".") || "root"}: ${e.message}`)
+        .join("; ");
+      return response.failure(res, errors, 400);
+    }
+
+    const data: Record<string, unknown> = Object.fromEntries(
+      Object.entries(validation.data).filter(([, v]) => v !== "" && v !== undefined),
+    );
 
     if (req.file) {
       const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
