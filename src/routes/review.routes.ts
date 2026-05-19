@@ -14,6 +14,10 @@ router.put(
   upload.single("file"),
   reviewController.update,
 );
-router.delete("/:id", authMiddleware.requireAdmin, reviewController.deleteReview);
+router.delete(
+  "/:id",
+  authMiddleware.requireAdmin,
+  reviewController.deleteReview,
+);
 
 export default router;

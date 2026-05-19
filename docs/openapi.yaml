@@ -21,7 +21,6 @@ tags:
   - name: Users
 
 paths:
-
   /reviews:
     get:
       tags: [Reviews]
@@ -143,9 +142,9 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Contributor'
+                      $ref: "#/components/schemas/Contributor"
         "500":
-          $ref: '#/components/responses/InternalError'
+          $ref: "#/components/responses/InternalError"
 
   /contributors/refresh:
     post:
@@ -176,11 +175,11 @@ paths:
                       total:
                         type: number
         "401":
-          $ref: '#/components/responses/Unauthorized'
+          $ref: "#/components/responses/Unauthorized"
         "403":
-          $ref: '#/components/responses/Forbidden'
+          $ref: "#/components/responses/Forbidden"
         "500":
-          $ref: '#/components/responses/InternalError'
+          $ref: "#/components/responses/InternalError"
   /health:
     get:
       tags: [Health]
