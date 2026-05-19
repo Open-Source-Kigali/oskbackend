@@ -46,7 +46,7 @@ async function findProjectBySlug(
   next: NextFunction,
 ) {
   try {
-    const project = await projectService.findPublicProjectBySlug(req.params.slug);
+    const project = await projectService.findProjectBySlugSafe(req.params.slug);
     if (!project) return response.failure(res, "Project not found", 404);
     response.success(res, project, 200, "Project retrieved successfully");
   } catch (err) {

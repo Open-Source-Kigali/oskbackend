@@ -2,7 +2,7 @@ import { prisma } from "../config/prisma";
 import { Event, Prisma } from "../generated/prisma/client";
 
 // Public event responses should not leak the backing Cloudinary identifier.
-const publicEventSelect = {
+const eventSafeSelect = {
   id: true,
   title: true,
   tagline: true,
@@ -24,17 +24,17 @@ const publicEventSelect = {
 } satisfies Prisma.EventSelect;
 
 async function findAllEvents() {
-  return prisma.event.findMany({ select: publicEventSelect });
+  return prisma.event.findMany({ select: eventSafeSelect });
 }
 
-async function findPublicEventById(id: string) {
-  return prisma.event.findUnique({ where: { id }, select: publicEventSelect });
+async function findEventByIdSafe(id: string) {
+  return prisma.event.findUnique({ where: { id }, select: eventSafeSelect });
 }
 
 async function addEvent(
   eventData: Omit<Event, "id" | "createdAt" | "updatedAt">,
 ) {
-  return prisma.event.create({ data: eventData, select: publicEventSelect });
+  return prisma.event.create({ data: eventData, select: eventSafeSelect });
 }
 
 async function findEventById(id: string) {
@@ -45,7 +45,7 @@ async function updateEvent(id: string, eventData: Prisma.EventUpdateInput) {
   return prisma.event.update({
     where: { id },
     data: eventData,
-    select: publicEventSelect,
+    select: eventSafeSelect,
   });
 }
 
@@ -55,7 +55,7 @@ async function deleteEvent(id: string) {
 
 export default {
   findAllEvents,
-  findPublicEventById,
+  findEventByIdSafe,
   addEvent,
   findEventById,
   updateEvent,

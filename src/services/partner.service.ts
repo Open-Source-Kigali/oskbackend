@@ -2,7 +2,7 @@ import { prisma } from "../config/prisma";
 import { Partner, Prisma } from "../generated/prisma/client";
 
 // Public partner payloads only expose the URL clients render, not the storage key.
-const publicPartnerSelect = {
+const partnerSafeSelect = {
   id: true,
   name: true,
   websiteUrl: true,
@@ -14,17 +14,18 @@ const publicPartnerSelect = {
   updatedAt: true,
 } satisfies Prisma.PartnerSelect;
 
-async function findAllPartners() { fix/hide-public-image-identifiers
-  return prisma.partner.findMany({ select: publicPartnerSelect });
+async function findAllPartners() {
+  return prisma.partner.findMany({
+    select: partnerSafeSelect,
+    orderBy: { name: "asc" },
+  });
 }
 
-async function findPublicPartnerById(id: string) {
+async function findPartnerByIdSafe(id: string) {
   return prisma.partner.findUnique({
     where: { id },
-    select: publicPartnerSelect,
+    select: partnerSafeSelect,
   });
-  return prisma.partner.findMany({ orderBy: { name: "asc" } });
-dev
 }
 
 async function addPartner(
@@ -32,7 +33,7 @@ async function addPartner(
 ) {
   return prisma.partner.create({
     data: partnerData,
-    select: publicPartnerSelect,
+    select: partnerSafeSelect,
   });
 }
 
@@ -47,7 +48,7 @@ async function updatePartner(
   return prisma.partner.update({
     where: { id },
     data: partnerData,
-    select: publicPartnerSelect,
+    select: partnerSafeSelect,
   });
 }
 
@@ -57,7 +58,7 @@ async function deletePartner(id: string) {
 
 export default {
   findAllPartners,
-  findPublicPartnerById,
+  findPartnerByIdSafe,
   addPartner,
   findPartnerById,
   updatePartner,

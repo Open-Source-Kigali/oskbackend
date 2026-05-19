@@ -25,7 +25,7 @@ async function findPartnerById(
   next: NextFunction,
 ) {
   try {
-    const partner = await partnerService.findPublicPartnerById(req.params.id);
+    const partner = await partnerService.findPartnerByIdSafe(req.params.id);
     if (!partner) {
       return response.failure(res, "Partner not found", 404);
     }

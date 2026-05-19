@@ -82,7 +82,7 @@ async function findEventById(
   next: NextFunction,
 ) {
   try {
-    const event = await eventService.findPublicEventById(req.params.id);
+    const event = await eventService.findEventByIdSafe(req.params.id);
     if (!event) {
       return response.failure(res, "Event not found", 404);
     }

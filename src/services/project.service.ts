@@ -3,7 +3,7 @@ import { Prisma, Project } from "../generated/prisma/client";
 import { RepoSnapshot } from "./github.service";
 
 // Public project responses include the rendered image URL but never the Cloudinary asset id.
-const publicProjectSelect = {
+const projectSafeSelect = {
   id: true,
   slug: true,
   repoOwner: true,
@@ -32,7 +32,7 @@ const publicProjectSelect = {
 async function findAllProjects() {
   return prisma.project.findMany({
     orderBy: { createdAt: "desc" },
-    select: publicProjectSelect,
+    select: projectSafeSelect,
   });
 }
 
@@ -40,10 +40,10 @@ async function findProjectById(id: string) {
   return prisma.project.findUnique({ where: { id } });
 }
 
-async function findPublicProjectBySlug(slug: string) {
+async function findProjectBySlugSafe(slug: string) {
   return prisma.project.findUnique({
     where: { slug },
-    select: publicProjectSelect,
+    select: projectSafeSelect,
   });
 }
 
@@ -71,7 +71,7 @@ async function addProject(
 ) {
   return prisma.project.create({
     data: projectData,
-    select: publicProjectSelect,
+    select: projectSafeSelect,
   });
 }
 
@@ -79,7 +79,7 @@ async function updateProject(id: string, projectData: Prisma.ProjectUpdateInput)
   return prisma.project.update({
     where: { id },
     data: projectData,
-    select: publicProjectSelect,
+    select: projectSafeSelect,
   });
 }
 
@@ -108,14 +108,14 @@ async function applyGithubSnapshot(id: string, snap: RepoSnapshot) {
       ghPushedAt: snap.pushedAt,
       lastFetchedAt: new Date(),
     },
-    select: publicProjectSelect,
+    select: projectSafeSelect,
   });
 }
 
 export default {
   findAllProjects,
   findProjectById,
-  findPublicProjectBySlug,
+  findProjectBySlugSafe,
   findProjectBySlug,
   addProject,
   updateProject,
