@@ -14,7 +14,7 @@ const publicPartnerSelect = {
   updatedAt: true,
 } satisfies Prisma.PartnerSelect;
 
-async function findAllPartners() {
+async function findAllPartners() { fix/hide-public-image-identifiers
   return prisma.partner.findMany({ select: publicPartnerSelect });
 }
 
@@ -23,6 +23,8 @@ async function findPublicPartnerById(id: string) {
     where: { id },
     select: publicPartnerSelect,
   });
+  return prisma.partner.findMany({ orderBy: { name: "asc" } });
+dev
 }
 
 async function addPartner(
