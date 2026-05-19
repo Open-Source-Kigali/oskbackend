@@ -38,6 +38,14 @@ async function addMember(
   next: NextFunction,
 ) {
   try {
+    const { email } = req.body;
+
+    // Validate email format before processing
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (email && !emailRegex.test(email)) {
+      return response.failure(res, "Invalid email format", 400);
+    }
+
     const newMember = await memberService.addMember(req.body);
     response.success(res, newMember, 201, "Member created successfully");
   } catch (err) {

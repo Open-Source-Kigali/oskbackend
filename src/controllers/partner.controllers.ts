@@ -49,6 +49,14 @@ async function addPartner(
     return response.failure(res, "Logo file is required", 400);
   }
 
+  const { email } = req.body;
+
+  // Validate email format before processing
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (email && !emailRegex.test(email)) {
+    return response.failure(res, "Invalid email format", 400);
+  }
+
   let publicId: string | undefined;
   try {
     const uploaded = await uploadBuffer(
