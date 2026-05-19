@@ -1,6 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import memberService from "../services/member.service";
 import response from "../utils/response";
+import { parseRequestBody } from "../utils/validation";
+import {
+  createMemberSchema,
+  updateMemberSchema,
+  CreateMemberInput,
+  UpdateMemberInput,
+} from "../schemas/member.schema";
 import { CodingLevel, Member } from "../generated/prisma/client";
 
 const allowedCodingLevels = new Set(Object.values(CodingLevel));
@@ -53,9 +60,19 @@ async function updateMember(
   next: NextFunction,
 ) {
   try {
+    const existing = await memberService.findMemberById(req.params.id);
+    if (!existing) return response.failure(res, "Member not found", 404);
+
+    const data = parseRequestBody<UpdateMemberInput>(
+      updateMemberSchema,
+      req.body,
+      res,
+    );
+    if (!data) return;
+
     const filtered = Object.fromEntries(
-      Object.entries(req.body).filter(([, v]) => v !== ""),
-    ) as Partial<Omit<Member, "id">>;
+      Object.entries(data).filter(([, v]) => v !== "" && v !== undefined),
+    ) as UpdateMemberInput;
 
     if (
       filtered.codingLevel !== undefined &&
