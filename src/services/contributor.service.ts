@@ -56,7 +56,7 @@ function fetchGithubUser(username: string): Promise<GithubUser | null> {
         }
       });
     });
- 
+
     req.on("error", () => resolve(null));
     req.end();
   });
