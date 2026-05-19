@@ -26,7 +26,7 @@ export async function readContributors(): Promise<Contributor[]> {
 export async function refreshContributors() {
   const mdData = await fs.readFile(CONTRIBUTORS_MD_PATH, "utf8");
   const lines = mdData.split("\n");
-  
+
   const usernames: string[] = [];
   for (const line of lines) {
     const trimmed = line.trim();
@@ -41,8 +41,15 @@ export async function refreshContributors() {
   const fetchPromises = usernames.map(async (username) => {
     try {
       const res = await gh(`/users/${username}`);
-      const data = (await res.json()) as { login: string; name: string | null; avatar_url: string; html_url: string; bio: string | null; company: string | null };
-      
+      const data = (await res.json()) as {
+        login: string;
+        name: string | null;
+        avatar_url: string;
+        html_url: string;
+        bio: string | null;
+        company: string | null;
+      };
+
       const contributor: Contributor = {
         login: data.login,
         name: data.name || null,
@@ -61,11 +68,11 @@ export async function refreshContributors() {
   });
 
   const results = await Promise.allSettled(fetchPromises);
-  
+
   const contributors: Contributor[] = [];
   let successCount = 0;
   let failCount = 0;
-  
+
   for (const result of results) {
     if (result.status === "fulfilled") {
       contributors.push(result.value);
@@ -76,11 +83,15 @@ export async function refreshContributors() {
     }
   }
 
-  await fs.writeFile(CONTRIBUTORS_JSON_PATH, JSON.stringify(contributors, null, 2), "utf8");
-  
+  await fs.writeFile(
+    CONTRIBUTORS_JSON_PATH,
+    JSON.stringify(contributors, null, 2),
+    "utf8",
+  );
+
   return {
     success: successCount,
     failed: failCount,
-    total: usernames.length
+    total: usernames.length,
   };
 }
