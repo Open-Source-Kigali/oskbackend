@@ -851,8 +851,13 @@ components:
       properties:
         id: { type: string, format: uuid }
         name: { type: string, description: "Reviewer's name" }
-        profileUrl: { type: string, description: "Reviewer's profile image URL" }
-        profilePublicId: { type: string, description: "Cloudinary public ID for the profile image" }
+        profileUrl:
+          { type: string, description: "Reviewer's profile image URL" }
+        profilePublicId:
+          {
+            type: string,
+            description: "Cloudinary public ID for the profile image",
+          }
         role: { type: string, description: "Job title or role" }
         message: { type: string, description: "Review testimonial message" }
         createdAt: { type: string, format: date-time }
@@ -863,8 +868,13 @@ components:
       required: [name, profileUrl, profilePublicId, role, message]
       properties:
         name: { type: string, description: "Reviewer's name" }
-        profileUrl: { type: string, description: "Reviewer's profile image URL" }
-        profilePublicId: { type: string, description: "Cloudinary public ID for the profile image" }
+        profileUrl:
+          { type: string, description: "Reviewer's profile image URL" }
+        profilePublicId:
+          {
+            type: string,
+            description: "Cloudinary public ID for the profile image",
+          }
         role: { type: string, description: "Job title or role" }
         message: { type: string, description: "Review testimonial message" }
 
@@ -872,8 +882,13 @@ components:
       type: object
       properties:
         name: { type: string, description: "Reviewer's name" }
-        profileUrl: { type: string, description: "Reviewer's profile image URL" }
-        profilePublicId: { type: string, description: "Cloudinary public ID for the profile image" }
+        profileUrl:
+          { type: string, description: "Reviewer's profile image URL" }
+        profilePublicId:
+          {
+            type: string,
+            description: "Cloudinary public ID for the profile image",
+          }
         role: { type: string, description: "Job title or role" }
         message: { type: string, description: "Review testimonial message" }
 
