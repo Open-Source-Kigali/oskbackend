@@ -374,24 +374,6 @@ paths:
                         type: array
                         items: { $ref: "#/components/schemas/Project" }
         "500": { $ref: "#/components/responses/InternalError" }
-  /contributors:
-    get:
-      tags: [Contributors]
-      summary: List all contributors from CONTRIBUTORS.md and GitHub
-      responses:
-        "200":
-          description: Contributors retrieved successfully
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ApiSuccess"
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items: {}
-        "500": { $ref: "#/components/responses/InternalError" }
     post:
       tags: [Projects]
       summary: Create a project (admin only)
@@ -416,6 +398,25 @@ paths:
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /contributors:
+    get:
+      tags: [Contributors]
+      summary: List all contributors from CONTRIBUTORS.md and GitHub
+      responses:
+        "200":
+          description: Contributors retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: {}
         "500": { $ref: "#/components/responses/InternalError" }
 
   /projects/refresh:

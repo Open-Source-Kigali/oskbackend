@@ -2,6 +2,13 @@ import fs from "fs/promises";
 import path from "path";
 import https from "https";
 
+type ContributorProfile = Record<string, unknown> & {
+  login: string;
+  ok: boolean;
+};
+
+type GithubUser = Record<string, unknown>;
+
 function parseContributors(content: string) {
   const lines = content.split(/\r?\n/);
   const usernames: string[] = [];
@@ -19,7 +26,7 @@ function parseContributors(content: string) {
   return usernames;
 }
 
-function fetchGithubUser(username: string): Promise<any | null> {
+function fetchGithubUser(username: string): Promise<GithubUser | null> {
   return new Promise((resolve) => {
     const options = {
       hostname: "api.github.com",
@@ -39,36 +46,35 @@ function fetchGithubUser(username: string): Promise<any | null> {
       res.on("end", () => {
         try {
           if (statusCode && statusCode >= 200 && statusCode < 300) {
-            const parsed = JSON.parse(raw);
+            const parsed = JSON.parse(raw) as Record<string, unknown>;
             resolve(parsed);
           } else {
             resolve(null);
           }
-        } catch (err) {
+        } catch {
           resolve(null);
         }
       });
     });
-
+ 
     req.on("error", () => resolve(null));
     req.end();
   });
 }
 
-async function getContributors() {
+async function getContributors(): Promise<ContributorProfile[]> {
   const filePath = path.join(process.cwd(), "CONTRIBUTORS.md");
   let content: string;
   try {
     content = await fs.readFile(filePath, "utf8");
-  } catch (err) {
+  } catch {
     return [];
   }
-
   const usernames = parseContributors(content);
   const promises = usernames.map(async (u) => {
     const profile = await fetchGithubUser(u);
     if (!profile) return { login: u, ok: false };
-    return { ...profile, ok: true };
+    return { ...profile, ok: true } as ContributorProfile;
   });
 
   const results = await Promise.all(promises);

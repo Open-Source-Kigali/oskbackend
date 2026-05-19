@@ -10,7 +10,11 @@ beforeEach(() => vi.resetAllMocks());
 describe("GET /api/contributors", () => {
   it("returns 200 with a list of contributors", async () => {
     vi.mocked(contributorService.getContributors).mockResolvedValue([
-      { login: "Nick-Lemy", html_url: "https://github.com/Nick-Lemy" },
+      {
+        login: "Nick-Lemy",
+        html_url: "https://github.com/Nick-Lemy",
+        ok: true,
+      },
     ]);
 
     const res = await request(app).get("/api/contributors");
