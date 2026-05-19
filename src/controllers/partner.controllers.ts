@@ -51,9 +51,18 @@ async function addPartner(
     return response.failure(res, "Logo file is required", 400);
   }
 
-  if (req.body.websiteUrl) {
+  const body = req.body as CreatePartnerBody;
+  const { email, websiteUrl } = body;
+
+  // Validate email format before processing
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (email && !emailRegex.test(email)) {
+    return response.failure(res, "Invalid email format", 400);
+  }
+
+  if (websiteUrl) {
     try {
-      new URL(req.body.websiteUrl as string);
+      new URL(websiteUrl as string);
     } catch {
       return response.failure(res, "Invalid websiteUrl format", 400);
     }
