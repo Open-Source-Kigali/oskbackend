@@ -59,6 +59,14 @@ async function addProject(
   res: Response,
   next: NextFunction,
 ) {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(req.body.slug)) {
+    return response.failure(
+      res,
+      "slug must be lowercase alphanumeric with hyphens only",
+      400,
+    );
+  }
+
   if (!req.file) return response.failure(res, "Image file is required", 400);
 
   let publicId: string | undefined;
@@ -108,7 +116,16 @@ async function updateProject(
 
     const data: Record<string, unknown> = {};
     const b = req.body;
-    if (b.slug) data.slug = b.slug;
+    if (b.slug) {
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(b.slug)) {
+        return response.failure(
+          res,
+          "slug must be lowercase alphanumeric with hyphens only",
+          400,
+        );
+      }
+      data.slug = b.slug;
+    }
     if (b.repoOwner) data.repoOwner = b.repoOwner;
     if (b.repoName) data.repoName = b.repoName;
     if (b.tagline) data.tagline = b.tagline;
