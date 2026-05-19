@@ -24,8 +24,13 @@ function headers() {
   return h;
 }
 
-async function gh(path: string) {
+export async function gh(path: string) {
   const res = await fetch(`${API}${path}`, { headers: headers() });
+  if (res.status === 403) {
+    throw new Error(
+      `GitHub rate limit exceeded. Set GITHUB_TOKEN to increase your limit.`,
+    );
+  }
   if (!res.ok) {
     throw new Error(`GitHub ${res.status} on ${path}: ${await res.text()}`);
   }
