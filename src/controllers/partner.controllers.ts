@@ -5,6 +5,8 @@ import { Partner } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
 
 type PartnerBody = Omit<Partner, "id" | "createdAt" | "updatedAt">;
+type CreatePartnerBody = Omit<PartnerBody, "logoUrl" | "logoPublicId">;
+type UpdatePartnerBody = Partial<Omit<PartnerBody, "logoPublicId">>;
 
 async function findAllPartners(
   _req: Request,
@@ -40,18 +42,23 @@ async function findPartnerById(
   }
 }
 
-async function addPartner(
-  req: Request<unknown, unknown, Omit<PartnerBody, "logoUrl" | "logoPublicId">>,
-  res: Response,
-  next: NextFunction,
-) {
+async function addPartner(req: Request, res: Response, next: NextFunction) {
   if (!req.file) {
     return response.failure(res, "Logo file is required", 400);
   }
 
-  if (req.body.websiteUrl) {
+  const body = req.body as CreatePartnerBody;
+  const { email, websiteUrl } = body;
+
+  // Validate email format before processing
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (email && !emailRegex.test(email)) {
+    return response.failure(res, "Invalid email format", 400);
+  }
+
+  if (websiteUrl) {
     try {
-      new URL(req.body.websiteUrl as string);
+      new URL(websiteUrl as string);
     } catch {
       return response.failure(res, "Invalid websiteUrl format", 400);
     }
@@ -66,7 +73,7 @@ async function addPartner(
     publicId = uploaded.public_id;
 
     const newPartner = await partnerService.addPartner({
-      ...req.body,
+      ...body,
       logoUrl: uploaded.secure_url,
       logoPublicId: uploaded.public_id,
     });
@@ -79,11 +86,7 @@ async function addPartner(
 }
 
 async function updatePartner(
-  req: Request<
-    { id: string },
-    unknown,
-    Partial<Omit<PartnerBody, "logoPublicId">>
-  >,
+  req: Request<{ id: string }>,
   res: Response,
   next: NextFunction,
 ) {
@@ -93,7 +96,7 @@ async function updatePartner(
     if (!existing) return response.failure(res, "Partner not found", 404);
 
     const data: Partial<PartnerBody> = Object.fromEntries(
-      Object.entries(req.body).filter(([, v]) => v !== ""),
+      Object.entries(req.body as UpdatePartnerBody).filter(([, v]) => v !== ""),
     ) as Partial<PartnerBody>;
 
     if (data.websiteUrl) {
