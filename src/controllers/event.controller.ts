@@ -15,64 +15,8 @@ const FOLDER = "open-source-kigali/events";
 
 type EventBody = Omit<Event, "id" | "createdAt" | "updatedAt">;
 
-function parseBoolean(v: unknown) {
-  if (typeof v === "boolean") return v;
-  if (typeof v === "string") return v === "true" || v === "1";
-  return undefined;
-}
-
-function parseSpeakers(v: unknown): string[] | undefined {
-  if (Array.isArray(v)) return v.map(String);
-  if (typeof v !== "string") return undefined;
-  const trimmed = v.trim();
-  if (!trimmed) return [];
-  if (trimmed.startsWith("[")) {
-    try {
-      const parsed = JSON.parse(trimmed);
-      if (Array.isArray(parsed)) return parsed.map(String);
-    } catch {
-      // fall through
-    }
-  }
-  return [
-    ...new Set(
-      trimmed
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
-    ),
-  ];
-}
-
-function buildEventData(
-  body: Record<string, unknown>,
-): Prisma.EventUpdateInput {
-  const data: Record<string, unknown> = {};
-  const passthrough = [
-    "title",
-    "tagline",
-    "description",
-    "category",
-    "mode",
-    "location",
-    "timeLabel",
-    "registerUrl",
-  ];
-  for (const k of passthrough) {
-    if (body[k] !== undefined && body[k] !== "") data[k] = body[k];
-  }
-  if (body.featured !== undefined) data.featured = parseBoolean(body.featured);
-  if (body.capacity !== undefined)
-    data.capacity = body.capacity === null ? null : Number(body.capacity);
-  if (body.registered !== undefined)
-    data.registered = body.registered === null ? null : Number(body.registered);
-  if (body.date !== undefined) data.date = new Date(body.date as string);
-  if (body.endDate !== undefined)
-    data.endDate = body.endDate ? new Date(body.endDate as string) : null;
-  const speakers = parseSpeakers(body.speakers);
-  if (speakers !== undefined) data.speakers = speakers;
-  return data;
-}
+// Helper parsing functions removed — not used after merge. Kept intentionally
+// minimal to avoid lint errors and keep file focused.
 async function findAllEvents(_req: Request, res: Response, next: NextFunction) {
   try {
     const featured = _req.query.featured === "true" ? true : undefined;
