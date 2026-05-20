@@ -3,6 +3,7 @@ import eventService from "../services/event.service";
 import response from "../utils/response";
 import { Event, Prisma } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
+import trimStrings from "../utils/trim-strings";
 
 const FOLDER = "open-source-kigali/events";
 
@@ -27,14 +28,10 @@ function parseSpeakers(v: unknown): string[] | undefined {
       // fall through
     }
   }
-  return [
-    ...new Set(
-      trimmed
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
-    ),
-  ];
+  return trimmed
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 function buildEventData(
@@ -101,19 +98,12 @@ async function addEvent(
     return response.failure(res, "Image file is required", 400);
   }
 
-  const requiredFields = ["title", "description", "category", "location", "date"];
-  for (const field of requiredFields) {
-    if (!req.body[field]) {
-      return response.failure(res, `Missing required field: ${field}`, 400);
-    }
-  }
-
   let publicId: string | undefined;
   try {
     const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
     publicId = uploaded.public_id;
 
-    const data = buildEventData(req.body) as EventBody;
+    const data = buildEventData(trimStrings(req.body)) as EventBody;
     data.imageUrl = uploaded.secure_url;
     data.imagePublicId = uploaded.public_id;
     if (!data.speakers) data.speakers = [];
@@ -137,7 +127,7 @@ async function updateEvent(
     const existing = await eventService.findEventById(req.params.id);
     if (!existing) return response.failure(res, "Event not found", 404);
 
-    const data = buildEventData(req.body);
+    const data = buildEventData(trimStrings(req.body));
 
     if (req.file) {
       const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
