@@ -49,14 +49,6 @@ async function addPartner(
     return response.failure(res, "Logo file is required", 400);
   }
 
-  if (req.body.websiteUrl) {
-    try {
-      new URL(req.body.websiteUrl as string);
-    } catch {
-      return response.failure(res, "Invalid websiteUrl format", 400);
-    }
-  }
-
   let publicId: string | undefined;
   try {
     const uploaded = await uploadBuffer(
@@ -95,14 +87,6 @@ async function updatePartner(
     const data: Partial<PartnerBody> = Object.fromEntries(
       Object.entries(req.body).filter(([, v]) => v !== ""),
     ) as Partial<PartnerBody>;
-
-    if (data.websiteUrl) {
-      try {
-        new URL(data.websiteUrl as string);
-      } catch {
-        return response.failure(res, "Invalid websiteUrl format", 400);
-      }
-    }
 
     if (req.file) {
       const uploaded = await uploadBuffer(

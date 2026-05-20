@@ -27,14 +27,10 @@ function parseSpeakers(v: unknown): string[] | undefined {
       // fall through
     }
   }
-  return [
-    ...new Set(
-      trimmed
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
-    ),
-  ];
+  return trimmed
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 function buildEventData(
@@ -99,13 +95,6 @@ async function addEvent(
 ) {
   if (!req.file) {
     return response.failure(res, "Image file is required", 400);
-  }
-
-  const requiredFields = ["title", "description", "category", "location", "date"];
-  for (const field of requiredFields) {
-    if (!req.body[field]) {
-      return response.failure(res, `Missing required field: ${field}`, 400);
-    }
   }
 
   let publicId: string | undefined;
