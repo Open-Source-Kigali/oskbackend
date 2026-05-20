@@ -2,6 +2,13 @@ import { Request, Response, NextFunction } from "express";
 import memberService from "../services/member.service";
 import response from "../utils/response";
 import { CodingLevel, Member } from "../generated/prisma/client";
+import { parseRequestBody } from "../utils/validation";
+import {
+  createMemberSchema,
+  updateMemberSchema,
+  CreateMemberInput,
+  UpdateMemberInput,
+} from "../schemas/member.schema";
 
 const allowedCodingLevels = new Set(Object.values(CodingLevel));
 
@@ -35,12 +42,19 @@ async function findMemberById(
 }
 
 async function addMember(
-  req: Request<object, unknown, Omit<Member, "id">>,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) {
   try {
-    const newMember = await memberService.addMember(req.body);
+    const data = parseRequestBody<CreateMemberInput>(
+      createMemberSchema,
+      req.body,
+      res,
+    );
+    if (!data) return;
+
+    const newMember = await memberService.addMember(data);
     response.success(res, newMember, 201, "Member created successfully");
   } catch (err) {
     next(err);
@@ -48,25 +62,32 @@ async function addMember(
 }
 
 async function updateMember(
-  req: Request<{ id: string }, unknown, Partial<Omit<Member, "id">>>,
+  req: Request<{ id: string }>,
   res: Response,
   next: NextFunction,
 ) {
   try {
-    const filtered = Object.fromEntries(
-      Object.entries(req.body).filter(([, v]) => v !== ""),
-    ) as Partial<Omit<Member, "id">>;
+    const data = parseRequestBody<UpdateMemberInput>(
+      updateMemberSchema,
+      req.body,
+      res,
+    );
+    if (!data) return;
 
-    if (
-      filtered.codingLevel !== undefined &&
-      !allowedCodingLevels.has(filtered.codingLevel)
-    ) {
-      return response.failure(
-        res,
-        "Invalid codingLevel. Allowed values: beginner, intermediate, advanced",
-        400,
-      );
-    }
+    const filtered = Object.fromEntries(
+Object.entries(data).filter(([, v]) => v !== "" && v !== undefined),
+      ) as UpdateMemberInput;
+
+      if (
+        filtered.codingLevel !== undefined &&
+        !allowedCodingLevels.has(filtered.codingLevel)
+      ) {
+        return response.failure(
+          res,
+          "Invalid codingLevel. Allowed values: beginner, intermediate, advanced",
+          400,
+        );
+      }
 
     const updatedMember = await memberService.updateMember(
       req.params.id,
