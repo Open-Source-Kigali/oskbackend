@@ -3,6 +3,13 @@ import eventService from "../services/event.service";
 import response from "../utils/response";
 import { Event, Prisma } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
+import trimStrings from "../utils/trim-strings";
+import {
+  createEventSchema,
+  updateEventSchema,
+  CreateEventInput,
+  UpdateEventInput,
+} from "../schemas/event.schema";
 
 const FOLDER = "open-source-kigali/events";
 
@@ -66,10 +73,10 @@ function buildEventData(
   if (speakers !== undefined) data.speakers = speakers;
   return data;
 }
-
 async function findAllEvents(_req: Request, res: Response, next: NextFunction) {
   try {
-    const allEvents = await eventService.findAllEvents();
+    const featured = _req.query.featured === "true" ? true : undefined;
+    const allEvents = await eventService.findAllEvents(featured);
     response.success(res, allEvents, 200, "Events retrieved successfully");
   } catch (err) {
     next(err);
@@ -110,13 +117,22 @@ async function addEvent(
 
   let publicId: string | undefined;
   try {
+    const validation = createEventSchema.safeParse(req.body);
+    if (!validation.success) {
+      const errors = validation.error.issues
+        .map((e: any) => `${e.path.join(".") || "root"}: ${e.message}`)
+        .join("; ");
+      return response.failure(res, errors, 400);
+    }
+
     const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
     publicId = uploaded.public_id;
 
-    const data = buildEventData(req.body) as EventBody;
-    data.imageUrl = uploaded.secure_url;
-    data.imagePublicId = uploaded.public_id;
-    if (!data.speakers) data.speakers = [];
+    const data: EventBody = {
+      ...validation.data,
+      imageUrl: uploaded.secure_url,
+      imagePublicId: uploaded.public_id,
+    } as EventBody;
 
     const newEvent = await eventService.addEvent(data);
 
@@ -137,7 +153,17 @@ async function updateEvent(
     const existing = await eventService.findEventById(req.params.id);
     if (!existing) return response.failure(res, "Event not found", 404);
 
-    const data = buildEventData(req.body);
+    const validation = updateEventSchema.safeParse(req.body);
+    if (!validation.success) {
+      const errors = validation.error.issues
+        .map((e: any) => `${e.path.join(".") || "root"}: ${e.message}`)
+        .join("; ");
+      return response.failure(res, errors, 400);
+    }
+
+    const data: Prisma.EventUpdateInput = Object.fromEntries(
+      Object.entries(validation.data).filter(([, v]) => v !== "" && v !== undefined),
+    ) as Prisma.EventUpdateInput;
 
     if (req.file) {
       const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
