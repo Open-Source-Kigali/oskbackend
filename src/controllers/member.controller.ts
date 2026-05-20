@@ -1,9 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import memberService from "../services/member.service";
 import response from "../utils/response";
-import { CodingLevel, Member } from "../generated/prisma/client";
-
-const allowedCodingLevels = new Set(Object.values(CodingLevel));
+import { Member } from "../generated/prisma/client";
 
 async function findAllMembers(
   _req: Request,
@@ -56,18 +54,6 @@ async function updateMember(
     const filtered = Object.fromEntries(
       Object.entries(req.body).filter(([, v]) => v !== ""),
     ) as Partial<Omit<Member, "id">>;
-
-    if (
-      filtered.codingLevel !== undefined &&
-      !allowedCodingLevels.has(filtered.codingLevel)
-    ) {
-      return response.failure(
-        res,
-        "Invalid codingLevel. Allowed values: beginner, intermediate, advanced",
-        400,
-      );
-    }
-
     const updatedMember = await memberService.updateMember(
       req.params.id,
       filtered,
@@ -84,9 +70,6 @@ async function deleteMember(
   next: NextFunction,
 ) {
   try {
-    const existing = await memberService.findMemberById(req.params.id);
-    if (!existing) return response.failure(res, "Member not found", 404);
-
     await memberService.deleteMember(req.params.id);
     response.success(res, null, 204, "Member deleted successfully");
   } catch (err) {
