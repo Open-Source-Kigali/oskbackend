@@ -3,7 +3,7 @@ import { env } from "./config/env";
 
 if (!env.adminApiKey) {
   console.warn(
-    "WARNING: ADMIN_API_KEY is not set. All admin endpoints will return 500."
+    "WARNING: ADMIN_API_KEY is not set. All admin endpoints will return 500.",
   );
 }
 
