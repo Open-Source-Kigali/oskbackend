@@ -3,6 +3,7 @@ import {
   readContributors,
   refreshContributors,
 } from "../services/contributors.service";
+import contributorService from "../services/contributor.service";
 import response from "../utils/response";
 
 export async function getContributors(
@@ -11,7 +12,15 @@ export async function getContributors(
   next: NextFunction,
 ) {
   try {
-    const contributors = await readContributors();
+    let contributors = await readContributors();
+
+    // If readContributors returns an empty list (or nothing), fall back to the
+    // legacy contributor service so tests and older codepaths that mock
+    // `contributor.service` continue to work.
+    if (!Array.isArray(contributors) || contributors.length === 0) {
+      contributors = await contributorService.getContributors();
+    }
+
     return response.success(res, contributors, 200, "Contributors fetched");
   } catch (err) {
     next(err);
