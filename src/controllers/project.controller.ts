@@ -4,6 +4,7 @@ import response from "../utils/response";
 import { ProjectStatus } from "../generated/prisma/client";
 import { destroyImage, uploadBuffer } from "../utils/cloudinary-upload";
 import { fetchRepoSnapshot } from "../services/github.service";
+import trimStrings from "../utils/trim-strings";
 
 const FOLDER = "open-source-kigali/projects";
 
@@ -66,17 +67,18 @@ async function addProject(
     const uploaded = await uploadBuffer(req.file.buffer, FOLDER);
     publicId = uploaded.public_id;
 
-    const featured = parseBoolean(req.body.featured) ?? false;
+    const b = trimStrings(req.body) as CreateBody;
+    const featured = parseBoolean(b.featured) ?? false;
     const created = await projectService.addProject({
-      slug: req.body.slug,
-      repoOwner: req.body.repoOwner,
-      repoName: req.body.repoName,
-      tagline: req.body.tagline,
-      category: req.body.category,
-      status: req.body.status ?? "active",
+      slug: b.slug,
+      repoOwner: b.repoOwner,
+      repoName: b.repoName,
+      tagline: b.tagline,
+      category: b.category,
+      status: b.status ?? "active",
       featured,
-      maintainer: req.body.maintainer ?? null,
-      langColor: req.body.langColor ?? null,
+      maintainer: b.maintainer ?? null,
+      langColor: b.langColor ?? null,
       imageUrl: uploaded.secure_url,
       imagePublicId: uploaded.public_id,
     });
@@ -107,7 +109,7 @@ async function updateProject(
     if (!existing) return response.failure(res, "Project not found", 404);
 
     const data: Record<string, unknown> = {};
-    const b = req.body;
+    const b = trimStrings(req.body) as UpdateBody;
     if (b.slug) data.slug = b.slug;
     if (b.repoOwner) data.repoOwner = b.repoOwner;
     if (b.repoName) data.repoName = b.repoName;

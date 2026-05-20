@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import memberService from "../services/member.service";
 import response from "../utils/response";
-import { CodingLevel, Member } from "../generated/prisma/client";
-
-const allowedCodingLevels = new Set(Object.values(CodingLevel));
+import { Member } from "../generated/prisma/client";
+import trimStrings from "../utils/trim-strings";
 
 async function findAllMembers(
   _req: Request,
@@ -40,7 +39,7 @@ async function addMember(
   next: NextFunction,
 ) {
   try {
-    const newMember = await memberService.addMember(req.body);
+    const newMember = await memberService.addMember(trimStrings(req.body));
     response.success(res, newMember, 201, "Member created successfully");
   } catch (err) {
     next(err);
@@ -53,21 +52,10 @@ async function updateMember(
   next: NextFunction,
 ) {
   try {
+    const trimmed = trimStrings(req.body);
     const filtered = Object.fromEntries(
-      Object.entries(req.body).filter(([, v]) => v !== ""),
+      Object.entries(trimmed).filter(([, v]) => v !== ""),
     ) as Partial<Omit<Member, "id">>;
-
-    if (
-      filtered.codingLevel !== undefined &&
-      !allowedCodingLevels.has(filtered.codingLevel)
-    ) {
-      return response.failure(
-        res,
-        "Invalid codingLevel. Allowed values: beginner, intermediate, advanced",
-        400,
-      );
-    }
-
     const updatedMember = await memberService.updateMember(
       req.params.id,
       filtered,
@@ -84,9 +72,6 @@ async function deleteMember(
   next: NextFunction,
 ) {
   try {
-    const existing = await memberService.findMemberById(req.params.id);
-    if (!existing) return response.failure(res, "Member not found", 404);
-
     await memberService.deleteMember(req.params.id);
     response.success(res, null, 204, "Member deleted successfully");
   } catch (err) {
