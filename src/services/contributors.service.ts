@@ -25,12 +25,18 @@ export async function readContributors(): Promise<Contributor[]> {
 
 export async function refreshContributors() {
   const mdRaw = await fs.readFile(CONTRIBUTORS_MD_PATH, "utf-8");
-  
+
   const usernames = mdRaw
     .split("\n")
     .map((line) => line.trim())
-   .filter((line) => line && !line.startsWith("<!--") && !line.startsWith("#") && !line.includes(" "));
-    
+    .filter(
+      (line) =>
+        line &&
+        !line.startsWith("<!--") &&
+        !line.startsWith("#") &&
+        !line.includes(" "),
+    );
+
   const results = await Promise.allSettled(
     usernames.map(async (username) => {
       const res = await gh(`/users/${username}`);
@@ -43,7 +49,7 @@ export async function refreshContributors() {
         bio: data.bio || "",
         company: data.company || "",
       } as Contributor;
-    })
+    }),
   );
 
   const contributors: Contributor[] = [];
@@ -64,7 +70,7 @@ export async function refreshContributors() {
   await fs.writeFile(
     CONTRIBUTORS_JSON_PATH,
     JSON.stringify(contributors, null, 2),
-    "utf-8"
+    "utf-8",
   );
 
   return {

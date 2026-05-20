@@ -1,5 +1,8 @@
 import type { Request, Response } from "express";
-import { readContributors, refreshContributors } from "../services/contributors.service";
+import {
+  readContributors,
+  refreshContributors,
+} from "../services/contributors.service";
 import response from "../utils/response";
 
 export async function getContributors(req: Request, res: Response) {
