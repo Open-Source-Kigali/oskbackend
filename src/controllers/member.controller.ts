@@ -67,9 +67,6 @@ async function updateMember(
   next: NextFunction,
 ) {
   try {
-    const existing = await memberService.findMemberById(req.params.id);
-    if (!existing) return response.failure(res, "Member not found", 404);
-
     const data = parseRequestBody<UpdateMemberInput>(
       updateMemberSchema,
       req.body,
@@ -92,10 +89,14 @@ async function updateMember(
       );
     }
 
+    const existing = await memberService.findMemberById(req.params.id);
+    if (!existing) return response.failure(res, "Member not found", 404);
+
     const updatedMember = await memberService.updateMember(
       req.params.id,
       filtered,
     );
+
     response.success(res, updatedMember, 200, "Member updated successfully");
   } catch (err) {
     next(err);
