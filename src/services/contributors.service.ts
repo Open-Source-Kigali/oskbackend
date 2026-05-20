@@ -29,7 +29,7 @@ export async function refreshContributors() {
   const usernames = mdRaw
     .split("\n")
     .map((line) => line.trim())
-    .filter((line) => line && !line.startsWith("<!--"));
+   .filter((line) => line && !line.startsWith("<!--") && !line.startsWith("#") && !line.includes(" "));
     
   const results = await Promise.allSettled(
     usernames.map(async (username) => {
