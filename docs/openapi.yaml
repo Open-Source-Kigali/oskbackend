@@ -17,6 +17,8 @@ tags:
   - name: Events
   - name: Partners
   - name: Projects
+  - name: Reviews
+  - name: Contributors
   - name: Users
 
 paths:
@@ -370,6 +372,109 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "500": { $ref: "#/components/responses/InternalError" }
 
+  /reviews:
+    get:
+      tags: [Reviews]
+      summary: List all reviews
+      responses:
+        "200":
+          description: Reviews retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/Review" }
+        "500": { $ref: "#/components/responses/InternalError" }
+    post:
+      tags: [Reviews]
+      summary: Create a review
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: "#/components/schemas/ReviewInput" }
+      responses:
+        "201":
+          description: Review created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Review" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /reviews/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [Reviews]
+      summary: Get a review by id
+      responses:
+        "200":
+          description: Review retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Review" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+    put:
+      tags: [Reviews]
+      summary: Update a review (admin only)
+      security:
+        - adminApiKey: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: "#/components/schemas/ReviewUpdateInput" }
+      responses:
+        "200":
+          description: Review updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Review" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+    delete:
+      tags: [Reviews]
+      summary: Delete a review (admin only)
+      security:
+        - adminApiKey: []
+      responses:
+        "204":
+          description: Review deleted successfully
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiSuccess" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
   /projects:
     get:
       tags: [Projects]
@@ -508,6 +613,52 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "500": { $ref: "#/components/responses/InternalError" }
 
+  /contributors:
+    get:
+      tags: [Contributors]
+      summary: List contributor profiles
+      responses:
+        "200":
+          description: Contributors retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          { $ref: "#/components/schemas/ContributorProfile" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
+  /contributors/refresh:
+    post:
+      tags: [Contributors]
+      summary: Refresh contributor profiles from CONTRIBUTORS.md
+      security:
+        - adminApiKey: []
+      responses:
+        "200":
+          description: Contributors refresh completed successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiSuccess"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          {
+                            $ref: "#/components/schemas/ContributorRefreshResult",
+                          }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/InternalError" }
+
 components:
   securitySchemes:
     adminApiKey:
@@ -523,6 +674,25 @@ components:
         message: { type: string }
         data: {}
       required: [success, message, data]
+
+    ContributorProfile:
+      type: object
+      properties:
+        login: { type: string }
+        name: { type: string, nullable: true }
+        avatarUrl: { type: string, format: uri }
+        profileUrl: { type: string, format: uri }
+        bio: { type: string, nullable: true }
+        company: { type: string, nullable: true }
+      required: [login, avatarUrl, profileUrl]
+
+    ContributorRefreshResult:
+      type: object
+      properties:
+        login: { type: string }
+        ok: { type: boolean }
+        error: { type: string }
+      required: [login, ok]
 
     ApiError:
       type: object
@@ -615,7 +785,10 @@ components:
         timeLabel: { type: string }
         location: { type: string }
         speakers:
-          type: string
+          oneOf:
+            - type: string
+            - type: array
+              items: { type: string }
           description: "JSON array string or comma-separated names"
           example: '["Didas Mbarushimana", "Guest Mentor"]'
         registerUrl: { type: string }
@@ -642,7 +815,11 @@ components:
         timeLabel: { type: string }
         location: { type: string }
         speakers:
-          { type: string, description: "JSON array string or comma-separated" }
+          oneOf:
+            - type: string
+            - type: array
+              items: { type: string }
+          description: "JSON array string or comma-separated"
         registerUrl: { type: string }
 
     Partner:
@@ -685,6 +862,40 @@ components:
         email: { type: string, format: email }
         partnershipReason: { type: string }
 
+    Review:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        profileUrl: { type: string }
+        profilePublicId: { type: string }
+        role: { type: string }
+        message: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    ReviewInput:
+      type: object
+      required: [name, role, file, message]
+      properties:
+        name: { type: string }
+        role: { type: string }
+        file: { type: string, format: binary, description: "Profile image" }
+        message: { type: string }
+
+    ReviewUpdateInput:
+      type: object
+      properties:
+        name: { type: string }
+        role: { type: string }
+        file:
+          {
+            type: string,
+            format: binary,
+            description: "Replacement profile image (optional)",
+          }
+        message: { type: string }
+
     Project:
       type: object
       properties:
@@ -726,7 +937,10 @@ components:
         tagline: { type: string }
         category: { type: string }
         status: { type: string, enum: [active, archived, paused] }
-        featured: { type: boolean }
+        featured:
+          oneOf:
+            - type: boolean
+            - type: string
         maintainer: { type: string }
         langColor: { type: string }
 
@@ -745,7 +959,10 @@ components:
         tagline: { type: string }
         category: { type: string }
         status: { type: string, enum: [active, archived, paused] }
-        featured: { type: boolean }
+        featured:
+          oneOf:
+            - type: boolean
+            - type: string
         maintainer: { type: string }
         langColor: { type: string }
 
